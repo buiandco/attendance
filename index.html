@@ -139,13 +139,13 @@ async function setGroupAttendance(group){
   const members=state.guests.filter(g=>g.group===group),value=!members.every(g=>g.attended),old=members.map(g=>({...g}));
   members.forEach(g=>{g.attended=value;if(!value)g.gift=false});render();
   try{const d=await jsonp({action:"groupAttendance",group,attended:value?"true":"false",by:window.ATTENDANCE_CONFIG.deviceName||"Check-in",key:window.ATTENDANCE_CONFIG.sharedKey||""});if(!d.ok)throw new Error(d.error||"save");await refreshFromServerData(d);toast(value?group+" — whole group checked in":group+" — group attendance removed")}
-  catch(e){old.forEach(o=>Object.assign(state.guests.find(g=>g.id===o.id),o));render();toast("Could not update group")}
+  catch(e){old.forEach(o=>Object.assign(state.guests.find(g=>g.id===o.id),o));render();toast("Could not update group: "+(e.message||e))}
 }
 async function setGroupGift(group){
   const members=state.guests.filter(g=>g.group===group),value=!members.some(g=>g.gift),old=members.map(g=>({...g}));
   members.forEach(g=>{g.gift=value;if(value)g.attended=true});render();
   try{const d=await jsonp({action:"groupGift",group,gift:value?"true":"false",by:window.ATTENDANCE_CONFIG.deviceName||"Check-in",key:window.ATTENDANCE_CONFIG.sharedKey||""});if(!d.ok)throw new Error(d.error||"save");await refreshFromServerData(d);toast(value?group+" — gift received & group checked in":group+" — gift removed")}
-  catch(e){old.forEach(o=>Object.assign(state.guests.find(g=>g.id===o.id),o));render();toast("Could not update group gift")}
+  catch(e){old.forEach(o=>Object.assign(state.guests.find(g=>g.id===o.id),o));render();toast("Could not update group gift: "+(e.message||e))}
 }
 function renderTableMap(){
   const box=$("#tableMap"),win=$("#mapWindow"),stage=$("#mapStage"),pin=$("#mapPin");
