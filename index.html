@@ -175,8 +175,21 @@ function renderTableMap(){
 function render(){summary();renderTables();renderGuests();renderTableMap()}
 function applyServer(rows){if(!Array.isArray(rows))return;const byId=new Map(rows.map(r=>[String(r.id),r]));state.guests.forEach(g=>{const r=byId.get(g.id);if(r){g.group=r.group||"";g.attended=String(r.attended).toLowerCase()==="true"||r.attended===true;g.gift=String(r.gift).toLowerCase()==="true"||r.gift===true;g.time=r.time||"";g.by=r.by||""}});state.lastSync=Date.now();$("#dot").classList.add("live");$("#connectionText").textContent="Synced with Google Sheet";render()}
 function jsonp(params,timeout=8000){return new Promise((resolve,reject)=>{const cb="jc_cb_"+Date.now()+"_"+Math.random().toString(36).slice(2),s=document.createElement("script"),timer=setTimeout(()=>done(new Error("timeout")),timeout);function done(err,data){clearTimeout(timer);delete window[cb];s.remove();err?reject(err):resolve(data)}window[cb]=d=>done(null,d);const u=new URL(window.ATTENDANCE_CONFIG?.webAppUrl||"");Object.entries({...params,callback:cb}).forEach(([k,v])=>u.searchParams.set(k,v));s.src=u.toString();s.onerror=()=>done(new Error("network"));document.body.appendChild(s)})}
-async function sync(){if(!window.ATTENDANCE_CONFIG?.webAppUrl){$("#connectionText").textContent="Demo mode — connect Apps Script to enable live sync";return}$("#sync").classList.add("spinning");try{const d=await jsonp({action:"list",key:window.ATTENDANCE_CONFIG.sharedKey||""});if(!d.ok)throw new Error(d.error||"sync");applyServer(d.guests)}catch(e){$("#dot").classList.remove("live");$("#connectionText").textContent="Sync unavailable — tap ↻ to retry"}finally{$("#sync").classList.remove("spinning")}}
-async function setAttendance(g,value){const old={attended:g.attended,time:g.time,by:g.by};g.attended=value;g.time=value?new Date().toLocaleTimeString([],{hour:"numeric",minute:"2-digit"}):"";g.by=value?(window.ATTENDANCE_CONFIG?.deviceName||"Check-in"):"";render();if(!window.ATTENDANCE_CONFIG?.webAppUrl){toast(value?g.name+" marked attended":"Attendance undone");return}try{const d=await jsonp({action:"set",id:g.id,attended:value?"true":"false",by:window.ATTENDANCE_CONFIG.deviceName||"Check-in",key:window.ATTENDANCE_CONFIG.sharedKey||""});if(!d.ok)throw new Error(d.error||"save");if(d.guest){g.attended=!!d.guest.attended;g.time=d.guest.time||g.time;g.by=d.guest.by||g.by}render();toast(value?g.name+" checked in":"Attendance undone")}catch(e){Object.assign(g,old);render();toast("Could not save — attendance was not changed")}}
+async function apiCall(params, retries=2){
+  let lastErr;
+  const delays=[1000,3000];
+  for(let attempt=0;attempt<=retries;attempt++){
+    try{return await jsonp(params);}
+    catch(err){
+      lastErr=err;
+      if(attempt<retries) await new Promise(r=>setTimeout(r,delays[Math.min(attempt,delays.length-1)]));
+    }
+  }
+  throw lastErr;
+}
+
+async function sync(){if(!window.ATTENDANCE_CONFIG?.webAppUrl){$("#connectionText").textContent="Demo mode — connect Apps Script to enable live sync";return}$("#sync").classList.add("spinning");try{const d=await apiCall({action:"list",key:window.ATTENDANCE_CONFIG.sharedKey||""});if(!d.ok)throw new Error(d.error||"sync");applyServer(d.guests)}catch(e){$("#dot").classList.remove("live");$("#connectionText").textContent="Sync unavailable — tap ↻ to retry"}finally{$("#sync").classList.remove("spinning")}}
+async function setAttendance(g,value){const old={attended:g.attended,time:g.time,by:g.by};g.attended=value;g.time=value?new Date().toLocaleTimeString([],{hour:"numeric",minute:"2-digit"}):"";g.by=value?(window.ATTENDANCE_CONFIG?.deviceName||"Check-in"):"";render();if(!window.ATTENDANCE_CONFIG?.webAppUrl){toast(value?g.name+" marked attended":"Attendance undone");return}try{const d=await apiCall({action:"set",id:g.id,attended:value?"true":"false",by:window.ATTENDANCE_CONFIG.deviceName||"Check-in",key:window.ATTENDANCE_CONFIG.sharedKey||""});if(!d.ok)throw new Error(d.error||"save");if(d.guest){g.attended=!!d.guest.attended;g.time=d.guest.time||g.time;g.by=d.guest.by||g.by}render();toast(value?g.name+" checked in":"Attendance undone")}catch(e){Object.assign(g,old);render();toast("Could not save — attendance was not changed")}}
 async function setGift(g,value){
   const old={attended:g.attended,gift:g.gift,time:g.time,by:g.by};
   g.gift=value;
@@ -186,7 +199,7 @@ async function setGift(g,value){
   render();
   if(!window.ATTENDANCE_CONFIG?.webAppUrl){toast(value?g.name+" — gift recorded & attended":g.name+" — gift removed");return}
   try{
-    const d=await jsonp({action:"gift",id:g.id,gift:value?"true":"false",by:window.ATTENDANCE_CONFIG.deviceName||"Check-in",key:window.ATTENDANCE_CONFIG.sharedKey||""});
+    const d=await apiCall({action:"gift",id:g.id,gift:value?"true":"false",by:window.ATTENDANCE_CONFIG.deviceName||"Check-in",key:window.ATTENDANCE_CONFIG.sharedKey||""});
     if(!d.ok)throw new Error(d.error||"save");
     if(d.guest){g.attended=!!d.guest.attended;g.gift=!!d.guest.gift;g.time=d.guest.time||g.time;g.by=d.guest.by||g.by}
     render();toast(value?g.name+" — gift recorded & attended":g.name+" — gift removed");
@@ -198,7 +211,7 @@ $("#confirmUndo").addEventListener("click",()=>{const g=state.undo;$("#modalBack
 $("#modalBack").addEventListener("click",e=>{if(e.target===$("#modalBack")){$("#modalBack").classList.remove("show");state.undo=null}});
 $("#search").addEventListener("input",e=>{state.query=e.target.value;renderGuests();renderTableMap()});
 $("#sync").addEventListener("click",sync);
-render();sync();setInterval(()=>{if(document.visibilityState==="visible")sync()},5000);
+render();sync();setInterval(()=>{if(document.visibilityState==="visible")sync()},15000);
 document.addEventListener("visibilitychange",()=>{if(document.visibilityState==="visible")sync()});
 </script>
 </body>
