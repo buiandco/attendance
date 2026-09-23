@@ -125,13 +125,18 @@ function toast(m){const t=$("#toast");t.textContent=m;t.classList.add("show");cl
 function summary(){const n=state.guests.filter(g=>g.attended).length,t=state.guests.length,p=t?Math.round(n/t*100):0;$("#arrived").textContent=n;$("#total").textContent=t;$("#remaining").textContent=t-n;$("#percent").textContent=p+"%";$("#bar").style.width=p+"%"}
 function tableGuests(t){return state.guests.filter(g=>t==="ALL"||g.table===t)}
 function renderTables(){const root=$("#tables");root.innerHTML="";tableOrder.forEach(t=>{const gs=tableGuests(t),n=gs.filter(g=>g.attended).length,b=document.createElement("button");b.type="button";b.className="table-btn"+(state.table===t?" active":"")+(gs.length&&n===gs.length?" complete":"");b.innerHTML=`<div class="tn">${t==="ALL"?"ALL":t==="Main"?"MAIN":"TABLE "+t}</div><div class="tc">${n} / ${gs.length}</div>`;b.addEventListener("click",()=>{state.table=t;state.query="";$("#search").value="";render()});root.appendChild(b)})}
-function visibleGuests(){let gs=tableGuests(state.table);const q=norm(state.query);if(q)gs=state.guests.filter(g=>norm(g.name).includes(q));return gs}
+function visibleGuests(){
+  let gs=tableGuests(state.table);
+  const q=norm(state.query);
+  if(q) gs=state.guests.filter(g=>norm(g.name).includes(q)||norm(g.group).includes(q));
+  return gs
+}
 function groupMembers(g){return g.group?state.guests.filter(x=>x.group===g.group):[g]}
 function groupCardHtml(g){
   if(!g.group)return "";
   const members=groupMembers(g),allIn=members.every(x=>x.attended),gift=members.some(x=>x.gift);
   return `<div class="group-card">
-    <div class="group-head"><div><div class="group-kicker">Linked group</div><div class="group-name">${esc(g.group)}</div></div><div class="group-count">${members.length} guest${members.length===1?"":"s"}</div></div>
+    <div class="group-head"><div><div class="group-kicker">Family / linked group</div><div class="group-name">${esc(g.group)}</div></div><div class="group-count">${members.length} guest${members.length===1?"":"s"}</div></div>
     <div class="group-members">${members.map(m=>`<div class="group-member ${m.attended?"done":""}"><span>${m.attended?"✓ ":""}${esc(m.name)}</span><span>${m.table==="Main"?"Main Table":"Table "+esc(m.table)}</span></div>`).join("")}</div>
     <div class="group-actions-bar">
       <button class="group-btn primary" data-group-att="${esc(g.group)}">${allIn?"✓ Group attended":"✓ Check in whole group"}</button>
@@ -142,11 +147,15 @@ function groupCardHtml(g){
 function renderGuests(){
   const root=$("#guestList"),list=visibleGuests();root.innerHTML="";
   if(!list.length){root.innerHTML='<div class="empty">No guests found.</div>';return}
-  // If search has one clear match, show the linked group first.
-  if(state.query&&list.length===1&&list[0].group){
-    const wrap=document.createElement("div");wrap.innerHTML=groupCardHtml(list[0]);root.appendChild(wrap);
-    bindGroupButtons(root);
-  }
+  // Show family/group controls in both search results and table attendance.
+  const grouped=new Map();
+  list.forEach(g=>{if(g.group&&!grouped.has(g.group))grouped.set(g.group,g)});
+  grouped.forEach(g=>{
+    const members=groupMembers(g);
+    if(members.length<2)return;
+    const wrap=document.createElement("div");wrap.innerHTML=groupCardHtml(g);root.appendChild(wrap);
+  });
+  bindGroupButtons(root);
   list.forEach(g=>{
     const b=document.createElement("div");b.className="guest "+(g.attended?"attended":"");b.setAttribute("role","button");b.tabIndex=0;
     b.innerHTML=`<span class="check">${g.attended?"✓":""}</span><span class="gcopy"><span class="gname">${esc(g.name)}</span><span class="gmeta">${g.table==="Main"?"Main Table":"Table "+esc(g.table)}${g.group?" · "+esc(g.group):""}${g.attended&&g.time?" · "+esc(g.time):""}</span></span><span class="guest-actions">${g.attended?'<span class="status">Attended</span>':""}<button type="button" class="gift-btn${g.gift?" has-gift":""}">${g.gift?"🎁 Gift ✓":"🎁 Gift"}</button></span>`;
