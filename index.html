@@ -1,0 +1,205 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#fff9f6">
+<title>Jennifer & Charlie — Wedding Attendance</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600&family=Montserrat:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--rose:#c97579;--rose2:#ad555b;--champ:#caa77b;--ink:#2f2a28;--muted:#8e8581;--line:#ecdcd6;--green:#4e8066;--greenbg:#edf6f0;--cream:#fffaf7;--shadow:0 10px 28px rgba(91,59,49,.10)}
+*{box-sizing:border-box}html,body{margin:0;min-height:100%;font-family:"Montserrat",-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;color:var(--ink);background:#fff9f6}button,input{font:inherit}
+.app{width:min(900px,100%);margin:auto;padding:12px 10px 35px}.hero{text-align:center;padding:13px 6px 16px}.mono{font-family:"Cormorant Garamond",serif;color:var(--champ);font-size:32px;letter-spacing:.14em}.title{font-family:"Cormorant Garamond",serif;font-size:clamp(31px,8vw,52px);font-weight:500;letter-spacing:.045em;margin:2px 0 0}.sub{font-size:11px;letter-spacing:.19em;color:var(--rose);text-transform:uppercase;margin-top:7px}
+.card{background:#fffdfb;border:1px solid rgba(213,174,159,.28);border-radius:20px;box-shadow:var(--shadow)}.summary{padding:15px;margin-bottom:12px}.summary-top{display:flex;justify-content:space-between;align-items:end;gap:12px}.summary-num{font-family:"Cormorant Garamond",serif;font-size:36px;line-height:1;color:var(--green);font-weight:600}.summary-label{font-size:10px;text-transform:uppercase;letter-spacing:.13em;color:var(--muted);margin-top:3px}.remaining{text-align:right;font-size:12px;color:var(--muted)}.progress{height:8px;border-radius:99px;background:#f0e6e1;overflow:hidden;margin-top:12px}.bar{height:100%;width:0;background:var(--green);transition:width .25s}
+.tools{display:grid;grid-template-columns:1fr auto;gap:8px;margin-bottom:12px}.search{height:50px;border:1px solid var(--line);border-radius:15px;background:#fff;padding:0 15px;font-size:16px;outline:none;min-width:0}.search:focus{border-color:#d89a99;box-shadow:0 0 0 3px rgba(201,117,121,.09)}.sync{min-width:50px;border:1px solid var(--line);border-radius:15px;background:#fff;color:var(--rose);font-size:20px}.sync.spinning{animation:spin .8s linear infinite}@keyframes spin{to{transform:rotate(360deg)}}
+.tables{display:grid;grid-template-columns:repeat(4,1fr);gap:7px;margin-bottom:13px}.table-btn{min-height:61px;border:1px solid var(--line);background:#fffdfb;border-radius:14px;padding:7px 4px;color:var(--ink)}.table-btn.active{border-color:var(--rose);box-shadow:0 0 0 2px rgba(201,117,121,.10);background:#fff7f5}.table-btn.complete{background:var(--greenbg);border-color:#cfe2d5}.tn{font-weight:700;font-size:13px}.tc{font-size:10px;color:var(--muted);margin-top:4px}.table-btn.complete .tc{color:var(--green);font-weight:700}
+.panel{overflow:hidden}.panel-head{padding:14px 15px 11px;border-bottom:1px solid #f0e4df;display:flex;justify-content:space-between;align-items:center;gap:10px}.panel-title{font-family:"Cormorant Garamond",serif;font-size:27px;font-weight:600}.panel-count{font-size:11px;color:var(--muted);text-align:right}.guest-list{padding:7px}.guest{width:100%;min-height:58px;border:0;border-bottom:1px solid #f2e8e4;background:transparent;display:flex;align-items:center;gap:11px;text-align:left;padding:9px 8px;border-radius:12px;color:var(--ink)}.guest:last-child{border-bottom:0}.guest.attended{background:var(--greenbg);border-bottom-color:transparent}.check{width:32px;height:32px;flex:0 0 32px;border:2px solid #d9c8c1;border-radius:50%;display:grid;place-items:center;color:white;font-weight:800}.attended .check{background:var(--green);border-color:var(--green)}.gcopy{min-width:0;flex:1}.gname{display:block;font-weight:700;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.gmeta{display:block;font-size:10px;color:var(--muted);margin-top:4px}.attended .gmeta{color:var(--green);font-weight:600}.status{font-size:10px;font-weight:700;color:var(--green);text-transform:uppercase}.guest-actions{display:flex;align-items:center;gap:7px;flex:0 0 auto}.gift-btn{min-height:38px;min-width:58px;border:1px solid #ddc6bb;border-radius:11px;background:#fff8f4;color:#9b6754;font-size:11px;font-weight:700;padding:6px 9px}.gift-btn.has-gift{background:#f3e6d6;border-color:#d5b38b;color:#76523f}.gift-mark{font-size:12px;font-weight:700;color:#9b6754}.empty{text-align:center;padding:28px 15px;color:var(--muted);font-size:13px}
+.connection{display:flex;align-items:center;justify-content:center;gap:6px;color:var(--muted);font-size:10px;margin:10px 0}.dot{width:7px;height:7px;border-radius:50%;background:#d7b38b}.dot.live{background:var(--green)}.footer{text-align:center;font-size:9px;color:#aaa09c;margin-top:17px}
+.modal-back{position:fixed;inset:0;background:rgba(48,37,33,.36);display:none;align-items:end;justify-content:center;padding:12px;z-index:30}.modal-back.show{display:flex}.modal{width:min(500px,100%);background:#fff;border-radius:22px;padding:20px;box-shadow:0 20px 60px rgba(0,0,0,.18)}.modal h3{font-family:"Cormorant Garamond",serif;font-size:27px;margin:0 0 7px}.modal p{font-size:13px;color:var(--muted);line-height:1.5}.modal-actions{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:15px}.modal button{min-height:47px;border-radius:14px;border:1px solid var(--line);background:#fff;font-weight:700}.modal .danger{background:#b85d62;color:#fff;border-color:#b85d62}
+.toast{position:fixed;left:50%;bottom:18px;transform:translate(-50%,15px);opacity:0;pointer-events:none;background:#3e3937;color:#fff;padding:11px 14px;border-radius:12px;font-size:11px;z-index:40;transition:.2s;max-width:90%;text-align:center}.toast.show{opacity:1;transform:translate(-50%,0)}
+
+
+.group-card{margin:10px 0 13px;border:1px solid #ead7cf;border-radius:16px;background:#fffaf7;overflow:hidden}
+.group-head{padding:12px 13px 9px;display:flex;align-items:flex-start;justify-content:space-between;gap:10px}
+.group-kicker{font-size:9px;letter-spacing:.16em;text-transform:uppercase;color:var(--rose2);font-weight:700}
+.group-name{font-family:"Cormorant Garamond",serif;font-size:22px;font-weight:600;line-height:1.05;margin-top:2px}
+.group-count{font-size:10px;color:var(--muted);white-space:nowrap}
+.group-members{padding:0 13px 10px}
+.group-member{display:flex;justify-content:space-between;gap:10px;padding:7px 0;border-top:1px solid #f0e4df;font-size:11px}
+.group-member:first-child{border-top:0}.group-member.done{color:var(--green);font-weight:700}
+.group-actions-bar{display:grid;grid-template-columns:1fr 1fr;gap:8px;padding:0 13px 13px}
+.group-btn{min-height:43px;border:1px solid #ddc6bb;border-radius:12px;background:white;color:var(--ink);font-size:11px;font-weight:700;padding:7px}
+.group-btn.primary{background:var(--rose2);border-color:var(--rose2);color:white}
+.group-btn.gifted{background:#f3e6d6;border-color:#d5b38b;color:#76523f}
+.table-peers{margin:0 0 12px;padding:10px 12px;border:1px dashed #e3d0c7;border-radius:13px;background:#fff;font-size:10px;color:var(--muted)}
+.table-peers strong{color:var(--ink)}
+
+.table-map{padding:13px 13px 15px;border-top:1px solid #f0e4df;background:#fffaf7}
+.table-map-head{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:9px}
+.table-map-title{font-family:"Cormorant Garamond",serif;font-size:21px;font-weight:600}
+.table-map-note{font-size:9px;color:var(--muted);text-align:right}
+.map-window{position:relative;width:100%;aspect-ratio:1/1;overflow:hidden;border-radius:15px;border:1px solid #ead8ca;background:#f0e5d9}
+.map-stage{position:absolute;width:1536px;height:1536px;transform-origin:0 0;will-change:transform}
+.map-stage img{position:absolute;inset:0;width:1536px;height:1536px;display:block;user-select:none;-webkit-user-drag:none}
+.map-pin{position:absolute;width:62px;height:62px;border-radius:50%;border:4px solid rgba(173,85,91,.95);background:rgba(255,255,255,.58);box-shadow:0 0 0 7px rgba(201,117,121,.18);transform:translate(-50%,-50%);display:grid;place-items:center;color:var(--rose2);font-size:17px;font-weight:800}
+.map-pin.main{width:100px;height:56px;border-radius:18px;font-size:12px}
+.map-hint{text-align:center;color:var(--muted);font-size:9px;margin-top:7px}
+
+@media(min-width:650px){.tables{grid-template-columns:repeat(8,1fr)}.guest-list{display:grid;grid-template-columns:1fr 1fr;gap:5px}.guest{border:1px solid #f1e6e1}.modal-back{align-items:center}}
+</style>
+</head>
+<body>
+<div class="app">
+<header class="hero"><div class="mono">J&nbsp; | &nbsp;C</div><h1 class="title">Wedding Attendance</h1><div class="sub">26 September 2026</div></header>
+
+<section class="summary card">
+ <div class="summary-top"><div><div class="summary-num"><span id="arrived">0</span> / <span id="total">0</span></div><div class="summary-label">Guests arrived</div></div><div class="remaining"><b id="remaining">0</b> remaining<br><span id="percent">0%</span> checked in</div></div>
+ <div class="progress"><div class="bar" id="bar"></div></div>
+</section>
+
+<div class="tools"><input id="search" class="search" placeholder="Search guest name…" autocomplete="off"><button id="sync" class="sync" type="button" aria-label="Refresh attendance">↻</button></div>
+<div id="tables" class="tables"></div>
+
+<section class="panel card">
+ <div class="panel-head"><div id="panelTitle" class="panel-title">All Guests</div><div id="panelCount" class="panel-count"></div></div>
+ <div id="guestList" class="guest-list"></div>
+ <div id="tableMap" class="table-map" hidden>
+   <div class="table-map-head"><div id="tableMapTitle" class="table-map-title">Table location</div><div class="table-map-note">Reception layout</div></div>
+   <div id="mapWindow" class="map-window">
+     <div id="mapStage" class="map-stage">
+       <img src="wedding-map.png" alt="Reception table layout">
+       <div id="mapPin" class="map-pin"></div>
+     </div>
+   </div>
+   <div class="map-hint">Highlighted on the same reception map as the Seat Finder</div>
+ </div>
+</section>
+<div class="connection"><span id="dot" class="dot"></span><span id="connectionText">Local guest list ready</span></div>
+<div class="footer">Jennifer & Charlie · Private wedding check-in</div>
+</div>
+
+<div id="modalBack" class="modal-back">
+ <div class="modal"><h3>Undo attendance?</h3><p id="modalText"></p><div class="modal-actions"><button id="cancelUndo" type="button">Keep attended</button><button id="confirmUndo" class="danger" type="button">Undo</button></div></div>
+</div>
+<div id="toast" class="toast"></div>
+<script src="config.js"></script>
+<script>
+const SEED=[{"first":"Charlie","last":"Bui","table":"Main"},{"first":"Jennifer","last":"Bui","table":"Main"},{"first":"Joanne","last":"Bui","table":"Main"},{"first":"Sandy","last":"Nguyen","table":"Main"},{"first":"Justina","last":"Chu","table":"Main"},{"first":"Lawrence","last":"Bui","table":"Main"},{"first":"Khanh","last":"Mai","table":"Main"},{"first":"Benjamin","last":"Hua","table":"Main"},{"first":"Luot","last":"Bui","table":"1"},{"first":"Chau","last":"Bui","table":"1"},{"first":"Monica Thao","last":"Le","table":"1"},{"first":"Nam","last":"Nguyen","table":"1"},{"first":"Camila Thao","last":"La","table":"1"},{"first":"Huan","last":"La","table":"1"},{"first":"Duc Hien","last":"Bui","table":"1"},{"first":"Thi Anh Tho","last":"Bui","table":"1"},{"first":"Phuoc Anh","last":"Nguyen","table":"1"},{"first":"Quang","last":"Bui","table":"2"},{"first":"Phuong","last":"Nguyen","table":"2"},{"first":"Que","last":"Bui","table":"2"},{"first":"Henry","last":"Nguyen","table":"2"},{"first":"Bryan","last":"Bui","table":"2"},{"first":"Sally","last":"Cai","table":"2"},{"first":"Eric","last":"Bui","table":"2"},{"first":"Natasha","last":"Trieu","table":"2"},{"first":"Layla","last":"Bui","table":"2"},{"first":"Hanna","last":"Bui","table":"2"},{"first":"Tram","last":"Bui","table":"2"},{"first":"Hau","last":"Bui","table":"3"},{"first":"Son of Hau","last":"Bui","table":"3"},{"first":"Cau","last":"Vu","table":"3"},{"first":"Mo","last":"Vu","table":"3"},{"first":"Sue","last":"Bui","table":"3"},{"first":"Peter","last":"Rowland","table":"3"},{"first":"Uyen","last":"Nguyen","table":"3"},{"first":"Frank","last":"Ceravolo","table":"3"},{"first":"Thinh","last":"","table":"3"},{"first":"Hoang","last":"","table":"3"},{"first":"Jimmy","last":"Bui","table":"3"},{"first":"Quy","last":"Nguyen","table":"4"},{"first":"Dung","last":"Vu","table":"4"},{"first":"Phu","last":"Nguyen","table":"4"},{"first":"Linh","last":"Nguyen","table":"4"},{"first":"Phuong","last":"Nguyen","table":"4"},{"first":"Yen","last":"Tran","table":"4"},{"first":"Thien","last":"Nguyen","table":"4"},{"first":"Hang","last":"Phan","table":"4"},{"first":"Majella","last":"Nguyen","table":"4"},{"first":"Tinh","last":"","table":"4"},{"first":"Huu Hai","last":"Pham","table":"5"},{"first":"Thi Bich Tam","last":"Nguyen","table":"5"},{"first":"Cuong","last":"Vu","table":"5"},{"first":"Kieu","last":"Nguyen","table":"5"},{"first":"Tan","last":"Nguyen","table":"5"},{"first":"Luat","last":"Ly","table":"5"},{"first":"Tam","last":"","table":"5"},{"first":"Phuong","last":"","table":"5"},{"first":"Thi Hoai Tram","last":"Tran","table":"5"},{"first":"Minh","last":"Le","table":"5"},{"first":"Khac Anh","last":"Nguyen","table":"6"},{"first":"Chi","last":"Nguyen","table":"6"},{"first":"Ngu","last":"Nguyen","table":"6"},{"first":"Mai","last":"Nguyen","table":"6"},{"first":"Khanh","last":"Nguyen","table":"6"},{"first":"Angel","last":"Nguyen","table":"6"},{"first":"Patrick","last":"Nguyen","table":"6"},{"first":"Teresa","last":"Nguyen","table":"6"},{"first":"Chuong","last":"Tran","table":"6"},{"first":"Lien","last":"Doan","table":"6"},{"first":"Tuyet","last":"Tran","table":"7"},{"first":"Trung Hieu","last":"Le","table":"7"},{"first":"Anne","last":"Vu","table":"7"},{"first":"Kiet","last":"Nguyen","table":"7"},{"first":"Mai Phuong","last":"Dinh","table":"7"},{"first":"Doan Son","last":"Pham","table":"7"},{"first":"Thi Cam Tu","last":"Do","table":"7"},{"first":"Ngoc Thuy","last":"Nguyen","table":"7"},{"first":"Luong","last":"Nguyen","table":"7"},{"first":"Mai","last":"Vu","table":"7"},{"first":"Amanda","last":"Short","table":"8"},{"first":"Jeremy","last":"Short","table":"8"},{"first":"Vichet","last":"Chen","table":"8"},{"first":"Linda","last":"Wang","table":"8"},{"first":"Cynthia","last":"Lee","table":"8"},{"first":"Alexander","last":"Le","table":"8"},{"first":"Ivy","last":"Manlangit","table":"8"},{"first":"Jed","last":"Warwick","table":"8"},{"first":"Brendan","last":"Margetts","table":"8"},{"first":"Cindy","last":"Nguyen","table":"8"},{"first":"Hayden","last":"Hildenhagen","table":"9"},{"first":"Maria","last":"Mai","table":"9"},{"first":"Thysa","last":"Trannguyen","table":"9"},{"first":"Lindy","last":"Lam","table":"9"},{"first":"Kevin","last":"Jong","table":"9"},{"first":"Nick","last":"Verstegen","table":"9"},{"first":"James","last":"Nguyen","table":"9"},{"first":"Patricia","last":"Limawal","table":"9"},{"first":"Sweet","last":"Wong","table":"9"},{"first":"Felix","last":"Lee","table":"9"},{"first":"Marie","last":"Sahyoun","table":"10"},{"first":"Mark","last":"Penafiel","table":"10"},{"first":"Charlotte","last":"Khacha","table":"10"},{"first":"Jackie","last":"Wagstaff","table":"10"},{"first":"Pramesh","last":"Kovoor","table":"10"},{"first":"David","last":"Tanous","table":"10"},{"first":"William","last":"Chik","table":"10"},{"first":"Kitty Wing Yin","last":"Watt","table":"10"},{"first":"Tina","last":"Qian","table":"10"},{"first":"Angela","last":"Sun","table":"10"},{"first":"Mengwei","last":"Liu","table":"11"},{"first":"Jane","last":"Li","table":"11"},{"first":"Jarrah","last":"Spencer","table":"11"},{"first":"Simon","last":"Mcqueen","table":"11"},{"first":"Alan O","last":"Grady","table":"11"},{"first":"Layleen","last":"Langi","table":"11"},{"first":"Jae","last":"Park","table":"11"},{"first":"Amanda","last":"Shui","table":"11"},{"first":"Jacky","last":"Chen","table":"11"},{"first":"Ismail","last":"Goolam","table":"11"},{"first":"Elise","last":"Goh","table":"12"},{"first":"Dani","last":"Goh","table":"12"},{"first":"Albert","last":"Goh","table":"12"},{"first":"Tae","last":"Cho","table":"12"},{"first":"Delfino","last":"Dimascio","table":"12"},{"first":"Ken","last":"Faulder","table":"12"},{"first":"Alice","last":"Ma","table":"12"},{"first":"Jacqueline","last":"Williams","table":"12"},{"first":"Moira","last":"Gumley","table":"12"},{"first":"Alister","last":"Hanbridge","table":"12"},{"first":"Angelina","last":"Pham","table":"13"},{"first":"Kaitlin","last":"Pham","table":"13"},{"first":"Monica","last":"Bui","table":"13"},{"first":"Kimmy","last":"Pham","table":"13"},{"first":"Danica","last":"Tep","table":"13"},{"first":"Joanna","last":"Nguyen","table":"13"},{"first":"Jamie","last":"Le","table":"13"},{"first":"Jeremy","last":"Trinh","table":"13"},{"first":"Justin","last":"Nguyen","table":"13"},{"first":"Daniel","last":"Pham","table":"13"},{"first":"David","last":"Chau","table":"13"},{"first":"Jessica","last":"Huy","table":"14"},{"first":"Sandy","last":"Chan-Trieu","table":"14"},{"first":"John","last":"Trieu","table":"14"},{"first":"Jackson","last":"Eng","table":"14"},{"first":"Terry","last":"Dao","table":"14"},{"first":"Kim","last":"Vu","table":"14"},{"first":"Kenneth","last":"Tse","table":"14"},{"first":"Kim","last":"Pham","table":"14"},{"first":"Gus","last":"Maalouf","table":"14"},{"first":"Alan","last":"Hat","table":"14"},{"first":"Rita","last":"Nop","table":"14"},{"first":"Suzie","last":"Pose","table":"15"},{"first":"Dara","last":"Tran","table":"15"},{"first":"Jessica","last":"Haden","table":"15"},{"first":"Mitchell","last":"Haden","table":"15"},{"first":"Rahme","last":"Ahmet","table":"15"},{"first":"Hang","last":"Nguyen","table":"15"},{"first":"Anthy","last":"Nguyen","table":"15"},{"first":"Tyson","last":"Vaughan","table":"15"},{"first":"Teresa","last":"Romanovsky","table":"15"},{"first":"Arek","last":"Szabelski","table":"15"},{"first":"Robert","last":"Middleton","table":"15"},{"first":"Irish","last":"Dimol","table":"15"},{"first":"Niko","last":"Nuttunen","table":"16"},{"first":"Lily-Rose","last":"Dona","table":"16"},{"first":"Nathan","last":"Cairney","table":"16"},{"first":"Alexandria","last":"Edge","table":"16"},{"first":"Edward","last":"Ovadia","table":"16"},{"first":"Sue","last":"Soueid","table":"16"},{"first":"David","last":"Donohoe","table":"16"},{"first":"Kala","last":"Sonni","table":"16"},{"first":"Jodie","last":"Lindsay","table":"16"},{"first":"James","last":"Rodrick","table":"16"},{"first":"Alvin","last":"Lai","table":"17"},{"first":"Ngoc Khanh Tien","last":"Nguyen","table":"17"},{"first":"Michael","last":"Tran","table":"17"},{"first":"David","last":"Ramjan","table":"17"},{"first":"Tara","last":"Nguyen","table":"17"},{"first":"Anna","last":"Ngo","table":"17"},{"first":"David","last":"Nguyen","table":"17"},{"first":"Vivian","last":"Lai","table":"17"},{"first":"Shane","last":"Nguyen","table":"17"},{"first":"Ray","last":"Li","table":"17"},{"first":"Mong Le","last":"Bui","table":"18"},{"first":"Thi Lan Chi","last":"Lai","table":"18"},{"first":"Thi Lan Anh","last":"Lai","table":"18"},{"first":"Van Dao","last":"Nguyen","table":"18"},{"first":"Thi Lan Huong","last":"Lai","table":"18"},{"first":"Thi Thanh Hang","last":"Lai","table":"18"},{"first":"Cong Tuan","last":"Trinh","table":"18"},{"first":"Dinh Sinh","last":"Trinh","table":"18"},{"first":"Thi Yen","last":"Tran","table":"18"},{"first":"Luong Ngoc","last":"Lai","table":"19"},{"first":"Thi Kim Anh","last":"Hoang","table":"19"},{"first":"Thi Thuy Dung","last":"Lai","table":"19"},{"first":"Luis Ernesto","last":"Ovalle","table":"19"},{"first":"Thi Minh Huyen","last":"Nguyen","table":"19"},{"first":"Thi Kim Nga","last":"Lai","table":"19"},{"first":"Thanh Tuan","last":"Nguyen","table":"19"},{"first":"Duy Phuoc Trach","last":"Le","table":"19"},{"first":"Thi Thuy Vy","last":"Lai","table":"19"},{"first":"Thuy Uyen Truc","last":"Tran","table":"19"},{"first":"Duy Khanh","last":"Lai","table":"19"},{"first":"Mell","last":"Tran","table":"20"},{"first":"Alex","last":"Lee","table":"20"},{"first":"Daphne","last":"Vergara","table":"20"},{"first":"Nathan","last":"Lay","table":"20"},{"first":"Phil","last":"Nguyen","table":"20"},{"first":"Trung","last":"Nguyen","table":"20"},{"first":"Hyemin","last":"Yu","table":"20"},{"first":"Mark","last":"Tabone","table":"20"},{"first":"Josh","last":"Vu","table":"20"},{"first":"Nathan","last":"Tran","table":"20"},{"first":"Alen","last":"Biju","table":"20"},{"first":"Thuy Dung","last":"Tran","table":"21"},{"first":"Minh Quan","last":"Nguyen","table":"21"},{"first":"Linda","last":"Ta","table":"21"},{"first":"Charlee","last":"Nguyen","table":"21"},{"first":"Thien Phuc","last":"Tran","table":"21"},{"first":"Thi Thanh Huyen","last":"Tran","table":"21"},{"first":"Ngoc Thanh Van","last":"Nguyen","table":"21"},{"first":"Quoc Cuong","last":"Bui","table":"21"},{"first":"Thi Bich Tram","last":"Tram","table":"21"},{"first":"Jesah","last":"Gacula","table":"21"},{"first":"Olivia","last":"Tran","table":"22"},{"first":"Oriana","last":"Tran","table":"22"},{"first":"Jayden","last":"Bui","table":"22"},{"first":"Felix","last":"Le","table":"22"},{"first":"Dylan","last":"Hoang","table":"22"},{"first":"Kianna","last":"Lai","table":"22"},{"first":"Keira","last":"Le","table":"22"},{"first":"Emily","last":"Bui","table":"22"},{"first":"Mya","last":"Pham","table":"22"},{"first":"Cyrus","last":"Datdat","table":"22"},{"first":"Duc","last":"Lam","table":"23"},{"first":"Hanh","last":"Lam","table":"23"},{"first":"Anh Hong","last":"Lam","table":"23"},{"first":"Dao","last":"Pham","table":"23"},{"first":"Dung","last":"Lam","table":"23"},{"first":"Thanh","last":"Nguyen","table":"23"},{"first":"Dung","last":"Chau","table":"23"},{"first":"Duong","last":"Chau","table":"23"},{"first":"Ngoc","last":"Tran","table":"23"}];
+const $=s=>document.querySelector(s);
+const state={guests:SEED.map((g,i)=>({...g,id:`g${String(i+1).padStart(3,"0")}`,name:(g.first+" "+g.last).trim(),attended:false,gift:false,time:"",by:""})),table:"ALL",query:"",undo:null,lastSync:0};
+const tableOrder=["ALL","Main",...Array.from({length:23},(_,i)=>String(i+1))];
+function norm(s){return String(s||"").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/[^a-z0-9]/g,"")}
+function esc(s){return String(s).replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#039;"}[m]))}
+function toast(m){const t=$("#toast");t.textContent=m;t.classList.add("show");clearTimeout(toast.t);toast.t=setTimeout(()=>t.classList.remove("show"),2500)}
+function summary(){const n=state.guests.filter(g=>g.attended).length,t=state.guests.length,p=t?Math.round(n/t*100):0;$("#arrived").textContent=n;$("#total").textContent=t;$("#remaining").textContent=t-n;$("#percent").textContent=p+"%";$("#bar").style.width=p+"%"}
+function tableGuests(t){return state.guests.filter(g=>t==="ALL"||g.table===t)}
+function renderTables(){const root=$("#tables");root.innerHTML="";tableOrder.forEach(t=>{const gs=tableGuests(t),n=gs.filter(g=>g.attended).length,b=document.createElement("button");b.type="button";b.className="table-btn"+(state.table===t?" active":"")+(gs.length&&n===gs.length?" complete":"");b.innerHTML=`<div class="tn">${t==="ALL"?"ALL":t==="Main"?"MAIN":"TABLE "+t}</div><div class="tc">${n} / ${gs.length}</div>`;b.addEventListener("click",()=>{state.table=t;state.query="";$("#search").value="";render()});root.appendChild(b)})}
+function visibleGuests(){let gs=tableGuests(state.table);const q=norm(state.query);if(q)gs=state.guests.filter(g=>norm(g.name).includes(q));return gs}
+function groupMembers(g){return g.group?state.guests.filter(x=>x.group===g.group):[g]}
+function groupCardHtml(g){
+  if(!g.group)return "";
+  const members=groupMembers(g),allIn=members.every(x=>x.attended),gift=members.some(x=>x.gift);
+  return `<div class="group-card">
+    <div class="group-head"><div><div class="group-kicker">Linked group</div><div class="group-name">${esc(g.group)}</div></div><div class="group-count">${members.length} guest${members.length===1?"":"s"}</div></div>
+    <div class="group-members">${members.map(m=>`<div class="group-member ${m.attended?"done":""}"><span>${m.attended?"✓ ":""}${esc(m.name)}</span><span>${m.table==="Main"?"Main Table":"Table "+esc(m.table)}</span></div>`).join("")}</div>
+    <div class="group-actions-bar">
+      <button class="group-btn primary" data-group-att="${esc(g.group)}">${allIn?"✓ Group attended":"✓ Check in whole group"}</button>
+      <button class="group-btn ${gift?"gifted":""}" data-group-gift="${esc(g.group)}">${gift?"🎁 Gift received":"🎁 Group gift"}</button>
+    </div>
+  </div>`;
+}
+function renderGuests(){
+  const root=$("#guestList"),list=visibleGuests();root.innerHTML="";
+  if(!list.length){root.innerHTML='<div class="empty">No guests found.</div>';return}
+  // If search has one clear match, show the linked group first.
+  if(state.query&&list.length===1&&list[0].group){
+    const wrap=document.createElement("div");wrap.innerHTML=groupCardHtml(list[0]);root.appendChild(wrap);
+    bindGroupButtons(root);
+  }
+  list.forEach(g=>{
+    const b=document.createElement("button");b.className="guest "+(g.attended?"attended":"");
+    b.innerHTML=`<span class="check">${g.attended?"✓":""}</span><span class="gcopy"><span class="gname">${esc(g.name)}</span><span class="gmeta">${g.table==="Main"?"Main Table":"Table "+esc(g.table)}${g.group?" · "+esc(g.group):""}${g.attended&&g.time?" · "+esc(g.time):""}</span></span><span class="guest-actions">${g.attended?'<span class="status">Attended</span>':""}<button type="button" class="gift-btn${g.gift?" has-gift":""}">${g.gift?"🎁 Gift ✓":"🎁 Gift"}</button></span>`;
+    const giftBtn=b.querySelector(".gift-btn");giftBtn.addEventListener("click",e=>{e.stopPropagation();setGift(g,!g.gift)});
+    b.addEventListener("click",e=>{if(!e.target.closest(".gift-btn"))toggleGuest(g)});root.appendChild(b)
+  });
+}
+function bindGroupButtons(root){
+  root.querySelectorAll("[data-group-att]").forEach(btn=>btn.addEventListener("click",()=>setGroupAttendance(btn.dataset.groupAtt)));
+  root.querySelectorAll("[data-group-gift]").forEach(btn=>btn.addEventListener("click",()=>setGroupGift(btn.dataset.groupGift)));
+}
+async function refreshFromServerData(d){
+  if(d&&d.guests){
+    d.guests.forEach(r=>{const g=state.guests.find(x=>x.id===r.id);if(g){g.group=r.group||"";g.attended=!!r.attended;g.gift=!!r.gift;g.time=r.time||"";g.by=r.by||""}});
+  }
+  render();
+}
+async function setGroupAttendance(group){
+  const members=state.guests.filter(g=>g.group===group),value=!members.every(g=>g.attended),old=members.map(g=>({...g}));
+  members.forEach(g=>{g.attended=value;if(!value)g.gift=false});render();
+  try{const d=await jsonp({action:"groupAttendance",group,attended:value?"true":"false",by:window.ATTENDANCE_CONFIG.deviceName||"Check-in",key:window.ATTENDANCE_CONFIG.sharedKey||""});if(!d.ok)throw new Error(d.error||"save");await refreshFromServerData(d);toast(value?group+" — whole group checked in":group+" — group attendance removed")}
+  catch(e){old.forEach(o=>Object.assign(state.guests.find(g=>g.id===o.id),o));render();toast("Could not update group: "+(e.message||e))}
+}
+async function setGroupGift(group){
+  const members=state.guests.filter(g=>g.group===group),value=!members.some(g=>g.gift),old=members.map(g=>({...g}));
+  members.forEach(g=>{g.gift=value;if(value)g.attended=true});render();
+  try{const d=await jsonp({action:"groupGift",group,gift:value?"true":"false",by:window.ATTENDANCE_CONFIG.deviceName||"Check-in",key:window.ATTENDANCE_CONFIG.sharedKey||""});if(!d.ok)throw new Error(d.error||"save");await refreshFromServerData(d);toast(value?group+" — gift received & group checked in":group+" — gift removed")}
+  catch(e){old.forEach(o=>Object.assign(state.guests.find(g=>g.id===o.id),o));render();toast("Could not update group gift: "+(e.message||e))}
+}
+function renderTableMap(){
+  const box=$("#tableMap"),win=$("#mapWindow"),stage=$("#mapStage"),pin=$("#mapPin");
+  let mapTable=state.table;
+  if(state.query){
+    const vg=visibleGuests();
+    if(vg.length===1) mapTable=vg[0].table; else {box.hidden=true;return}
+  }
+  if(mapTable==="ALL"){box.hidden=true;return}
+  const pos=tablePositions[mapTable];
+  if(!pos){box.hidden=true;return}
+  box.hidden=false;
+  $("#tableMapTitle").textContent=mapTable==="Main"?"Main Table location":"Table "+mapTable+" location";
+  pin.textContent=mapTable==="Main"?"MAIN":mapTable;
+  pin.className="map-pin"+(mapTable==="Main"?" main":"");
+  pin.style.left=pos[0]+"px"; pin.style.top=pos[1]+"px";
+  requestAnimationFrame(()=>{
+    const w=win.clientWidth,h=win.clientHeight;
+    // Show surrounding context, not just the table itself.
+    const scale=Math.min(w/900,h/900);
+    let tx=w/2-pos[0]*scale, ty=h/2-pos[1]*scale;
+    const minX=w-1536*scale,minY=h-1536*scale;
+    tx=Math.min(0,Math.max(minX,tx)); ty=Math.min(0,Math.max(minY,ty));
+    stage.style.transform=`translate(${tx}px,${ty}px) scale(${scale})`;
+  });
+}
+function render(){summary();renderTables();renderGuests();renderTableMap()}
+function applyServer(rows){if(!Array.isArray(rows))return;const byId=new Map(rows.map(r=>[String(r.id),r]));state.guests.forEach(g=>{const r=byId.get(g.id);if(r){g.group=r.group||"";g.attended=String(r.attended).toLowerCase()==="true"||r.attended===true;g.gift=String(r.gift).toLowerCase()==="true"||r.gift===true;g.time=r.time||"";g.by=r.by||""}});state.lastSync=Date.now();$("#dot").classList.add("live");$("#connectionText").textContent="Synced with Google Sheet";render()}
+function jsonp(params,timeout=8000){return new Promise((resolve,reject)=>{const cb="jc_cb_"+Date.now()+"_"+Math.random().toString(36).slice(2),s=document.createElement("script"),timer=setTimeout(()=>done(new Error("timeout")),timeout);function done(err,data){clearTimeout(timer);delete window[cb];s.remove();err?reject(err):resolve(data)}window[cb]=d=>done(null,d);const u=new URL(window.ATTENDANCE_CONFIG?.webAppUrl||"");Object.entries({...params,callback:cb}).forEach(([k,v])=>u.searchParams.set(k,v));s.src=u.toString();s.onerror=()=>done(new Error("network"));document.body.appendChild(s)})}
+async function sync(){if(!window.ATTENDANCE_CONFIG?.webAppUrl){$("#connectionText").textContent="Demo mode — connect Apps Script to enable live sync";return}$("#sync").classList.add("spinning");try{const d=await jsonp({action:"list",key:window.ATTENDANCE_CONFIG.sharedKey||""});if(!d.ok)throw new Error(d.error||"sync");applyServer(d.guests)}catch(e){$("#dot").classList.remove("live");$("#connectionText").textContent="Sync unavailable — tap ↻ to retry"}finally{$("#sync").classList.remove("spinning")}}
+async function setAttendance(g,value){const old={attended:g.attended,time:g.time,by:g.by};g.attended=value;g.time=value?new Date().toLocaleTimeString([],{hour:"numeric",minute:"2-digit"}):"";g.by=value?(window.ATTENDANCE_CONFIG?.deviceName||"Check-in"):"";render();if(!window.ATTENDANCE_CONFIG?.webAppUrl){toast(value?g.name+" marked attended":"Attendance undone");return}try{const d=await jsonp({action:"set",id:g.id,attended:value?"true":"false",by:window.ATTENDANCE_CONFIG.deviceName||"Check-in",key:window.ATTENDANCE_CONFIG.sharedKey||""});if(!d.ok)throw new Error(d.error||"save");if(d.guest){g.attended=!!d.guest.attended;g.time=d.guest.time||g.time;g.by=d.guest.by||g.by}render();toast(value?g.name+" checked in":"Attendance undone")}catch(e){Object.assign(g,old);render();toast("Could not save — attendance was not changed")}}
+async function setGift(g,value){
+  const old={attended:g.attended,gift:g.gift,time:g.time,by:g.by};
+  g.gift=value;
+  if(value)g.attended=true;
+  if(value&&!g.time)g.time=new Date().toLocaleTimeString([],{hour:"numeric",minute:"2-digit"});
+  if(value&&!g.by)g.by=window.ATTENDANCE_CONFIG?.deviceName||"Check-in";
+  render();
+  if(!window.ATTENDANCE_CONFIG?.webAppUrl){toast(value?g.name+" — gift recorded & attended":g.name+" — gift removed");return}
+  try{
+    const d=await jsonp({action:"gift",id:g.id,gift:value?"true":"false",by:window.ATTENDANCE_CONFIG.deviceName||"Check-in",key:window.ATTENDANCE_CONFIG.sharedKey||""});
+    if(!d.ok)throw new Error(d.error||"save");
+    if(d.guest){g.attended=!!d.guest.attended;g.gift=!!d.guest.gift;g.time=d.guest.time||g.time;g.by=d.guest.by||g.by}
+    render();toast(value?g.name+" — gift recorded & attended":g.name+" — gift removed");
+  }catch(e){Object.assign(g,old);render();toast("Could not save gift — no change was made")}
+}
+function toggleGuest(g){if(!g.attended){setAttendance(g,true);return}state.undo=g;$("#modalText").textContent=`${g.name} is already marked attended${g.time?" at "+g.time:""}. Only undo this if it was checked by mistake.`;$("#modalBack").classList.add("show")}
+$("#cancelUndo").addEventListener("click",()=>{$("#modalBack").classList.remove("show");state.undo=null});
+$("#confirmUndo").addEventListener("click",()=>{const g=state.undo;$("#modalBack").classList.remove("show");state.undo=null;if(g)setAttendance(g,false)});
+$("#modalBack").addEventListener("click",e=>{if(e.target===$("#modalBack")){$("#modalBack").classList.remove("show");state.undo=null}});
+$("#search").addEventListener("input",e=>{state.query=e.target.value;renderGuests();renderTableMap()});
+$("#sync").addEventListener("click",sync);
+render();sync();setInterval(()=>{if(document.visibilityState==="visible")sync()},5000);
+document.addEventListener("visibilitychange",()=>{if(document.visibilityState==="visible")sync()});
+</script>
+</body>
+</html>
