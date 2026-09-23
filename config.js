@@ -1,5 +1,5 @@
 window.ATTENDANCE_CONFIG = {
-  webAppUrl: "https://script.google.com/macros/s/AKfycbzMI1Yz5dqH6EKjI4xYVv0quaVnSFRSOGAnigkukXd9JimwEi5GC9IweZNvU22i5y0-/exec",
+  webAppUrl: "https://script.google.com/macros/s/AKfycbxk18lwwbrRfAVodjwhftAvVtR35L213EQD5o--G2I2nu8UXiX2QHJxfZ1nxMTWo_vB/exec",
   sharedKey: "BUI-tiful",
   deviceName: "Check-in Phone"
 };
