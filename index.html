@@ -97,7 +97,7 @@ function summary(){const n=state.guests.filter(g=>g.attended).length,t=state.gue
 function tableGuests(t){return state.guests.filter(g=>t==="ALL"||g.table===t)}
 function renderTables(){const root=$("#tables");root.innerHTML="";tableOrder.forEach(t=>{const gs=tableGuests(t),n=gs.filter(g=>g.attended).length,b=document.createElement("button");b.type="button";b.className="table-btn"+(state.table===t?" active":"")+(gs.length&&n===gs.length?" complete":"");b.innerHTML=`<div class="tn">${t==="ALL"?"ALL":t==="Main"?"MAIN":"TABLE "+t}</div><div class="tc">${n} / ${gs.length}</div>`;b.addEventListener("click",()=>{state.table=t;state.query="";$("#search").value="";render()});root.appendChild(b)})}
 function visibleGuests(){let gs=tableGuests(state.table);const q=norm(state.query);if(q)gs=state.guests.filter(g=>norm(g.name).includes(q));return gs}
-function groupMembers(g){return g.group?guests.filter(x=>x.group===g.group):[g]}
+function groupMembers(g){return g.group?state.guests.filter(x=>x.group===g.group):[g]}
 function groupCardHtml(g){
   if(!g.group)return "";
   const members=groupMembers(g),allIn=members.every(x=>x.attended),gift=members.some(x=>x.gift);
@@ -131,22 +131,52 @@ function bindGroupButtons(root){
 }
 async function refreshFromServerData(d){
   if(d&&d.guests){
-    d.guests.forEach(r=>{const g=guests.find(x=>x.id===r.id);if(g){g.group=r.group||"";g.attended=!!r.attended;g.gift=!!r.gift;g.time=r.time||"";g.by=r.by||""}});
+    d.guests.forEach(r=>{const g=state.guests.find(x=>x.id===r.id);if(g){g.group=r.group||"";g.attended=!!r.attended;g.gift=!!r.gift;g.time=r.time||"";g.by=r.by||""}});
   }
   render();
 }
 async function setGroupAttendance(group){
-  const members=guests.filter(g=>g.group===group),value=!members.every(g=>g.attended),old=members.map(g=>({...g}));
+  const members=state.guests.filter(g=>g.group===group),value=!members.every(g=>g.attended),old=members.map(g=>({...g}));
   members.forEach(g=>{g.attended=value;if(!value)g.gift=false});render();
   try{const d=await jsonp({action:"groupAttendance",group,attended:value?"true":"false",by:window.ATTENDANCE_CONFIG.deviceName||"Check-in",key:window.ATTENDANCE_CONFIG.sharedKey||""});if(!d.ok)throw new Error(d.error||"save");await refreshFromServerData(d);toast(value?group+" — whole group checked in":group+" — group attendance removed")}
-  catch(e){old.forEach(o=>Object.assign(guests.find(g=>g.id===o.id),o));render();toast("Could not update group")}
+  catch(e){old.forEach(o=>Object.assign(state.guests.find(g=>g.id===o.id),o));render();toast("Could not update group")}
 }
 async function setGroupGift(group){
-  const members=guests.filter(g=>g.group===group),value=!members.some(g=>g.gift),old=members.map(g=>({...g}));
+  const members=state.guests.filter(g=>g.group===group),value=!members.some(g=>g.gift),old=members.map(g=>({...g}));
   members.forEach(g=>{g.gift=value;if(value)g.attended=true});render();
   try{const d=await jsonp({action:"groupGift",group,gift:value?"true":"false",by:window.ATTENDANCE_CONFIG.deviceName||"Check-in",key:window.ATTENDANCE_CONFIG.sharedKey||""});if(!d.ok)throw new Error(d.error||"save");await refreshFromServerData(d);toast(value?group+" — gift received & group checked in":group+" — gift removed")}
-  catch(e){old.forEach(o=>Object.assign(guests.find(g=>g.id===o.id),o));render();toast("Could not update group gift")}
+  catch(e){old.forEach(o=>Object.assign(state.guests.find(g=>g.id===o.id),o));render();toast("Could not update group gift")}
 }
+function renderTableMap(){
+  const box=$("#tableMap"),win=$("#mapWindow"),stage=$("#mapStage"),pin=$("#mapPin");
+  let mapTable=state.table;
+  if(state.query){
+    const vg=visibleGuests();
+    if(vg.length===1) mapTable=vg[0].table; else {box.hidden=true;return}
+  }
+  if(mapTable==="ALL"){box.hidden=true;return}
+  const pos=tablePositions[mapTable];
+  if(!pos){box.hidden=true;return}
+  box.hidden=false;
+  $("#tableMapTitle").textContent=mapTable==="Main"?"Main Table location":"Table "+mapTable+" location";
+  pin.textContent=mapTable==="Main"?"MAIN":mapTable;
+  pin.className="map-pin"+(mapTable==="Main"?" main":"");
+  pin.style.left=pos[0]+"px"; pin.style.top=pos[1]+"px";
+  requestAnimationFrame(()=>{
+    const w=win.clientWidth,h=win.clientHeight;
+    // Show surrounding context, not just the table itself.
+    const scale=Math.min(w/900,h/900);
+    let tx=w/2-pos[0]*scale, ty=h/2-pos[1]*scale;
+    const minX=w-1536*scale,minY=h-1536*scale;
+    tx=Math.min(0,Math.max(minX,tx)); ty=Math.min(0,Math.max(minY,ty));
+    stage.style.transform=`translate(${tx}px,${ty}px) scale(${scale})`;
+  });
+}
+function render(){summary();renderTables();renderGuests();renderTableMap()}
+function applyServer(rows){if(!Array.isArray(rows))return;const byId=new Map(rows.map(r=>[String(r.id),r]));state.guests.forEach(g=>{const r=byId.get(g.id);if(r){g.group=r.group||"";g.attended=String(r.attended).toLowerCase()==="true"||r.attended===true;g.gift=String(r.gift).toLowerCase()==="true"||r.gift===true;g.time=r.time||"";g.by=r.by||""}});state.lastSync=Date.now();$("#dot").classList.add("live");$("#connectionText").textContent="Synced with Google Sheet";render()}
+function jsonp(params,timeout=8000){return new Promise((resolve,reject)=>{const cb="jc_cb_"+Date.now()+"_"+Math.random().toString(36).slice(2),s=document.createElement("script"),timer=setTimeout(()=>done(new Error("timeout")),timeout);function done(err,data){clearTimeout(timer);delete window[cb];s.remove();err?reject(err):resolve(data)}window[cb]=d=>done(null,d);const u=new URL(window.ATTENDANCE_CONFIG?.webAppUrl||"");Object.entries({...params,callback:cb}).forEach(([k,v])=>u.searchParams.set(k,v));s.src=u.toString();s.onerror=()=>done(new Error("network"));document.body.appendChild(s)})}
+async function sync(){if(!window.ATTENDANCE_CONFIG?.webAppUrl){$("#connectionText").textContent="Demo mode — connect Apps Script to enable live sync";return}$("#sync").classList.add("spinning");try{const d=await jsonp({action:"list",key:window.ATTENDANCE_CONFIG.sharedKey||""});if(!d.ok)throw new Error(d.error||"sync");applyServer(d.guests)}catch(e){$("#dot").classList.remove("live");$("#connectionText").textContent="Sync unavailable — tap ↻ to retry"}finally{$("#sync").classList.remove("spinning")}}
+async function setAttendance(g,value){const old={attended:g.attended,time:g.time,by:g.by};g.attended=value;g.time=value?new Date().toLocaleTimeString([],{hour:"numeric",minute:"2-digit"}):"";g.by=value?(window.ATTENDANCE_CONFIG?.deviceName||"Check-in"):"";render();if(!window.ATTENDANCE_CONFIG?.webAppUrl){toast(value?g.name+" marked attended":"Attendance undone");return}try{const d=await jsonp({action:"set",id:g.id,attended:value?"true":"false",by:window.ATTENDANCE_CONFIG.deviceName||"Check-in",key:window.ATTENDANCE_CONFIG.sharedKey||""});if(!d.ok)throw new Error(d.error||"save");if(d.guest){g.attended=!!d.guest.attended;g.time=d.guest.time||g.time;g.by=d.guest.by||g.by}render();toast(value?g.name+" checked in":"Attendance undone")}catch(e){Object.assign(g,old);render();toast("Could not save — attendance was not changed")}}
 async function setGift(g,value){
   const old={attended:g.attended,gift:g.gift,time:g.time,by:g.by};
   g.gift=value;
