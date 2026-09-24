@@ -1,5 +1,5 @@
 const $=s=>document.querySelector(s);
-const state={guests:[],table:"ALL",query:"",undo:null,lastSync:0};
+const state={guests:[],table:"ALL",query:"",undo:null,lastSync:0,loaded:false};
 const tableOrder=["ALL","Main",...Array.from({length:23},(_,i)=>String(i+1))];
 // Coordinates match wedding-map.png (1254 × 1254) — updated reception layout.
 const MAP_SIZE=1254;
@@ -44,7 +44,11 @@ function visibleGuests(){
     const matchedGroups=new Set(direct.filter(g=>g.group).map(g=>g.group));
     const ids=new Set(direct.map(g=>g.id));
     state.guests.forEach(g=>{if(g.group&&matchedGroups.has(g.group))ids.add(g.id)});
+    // Search keeps matched people/groups together in their Google Sheet order.
     gs=state.guests.filter(g=>ids.has(g.id));
+  }else{
+    // Door check-in view: guests still waiting first, attended guests underneath.
+    gs=[...gs].sort((a,b)=>Number(a.attended)-Number(b.attended));
   }
   return gs
 }
@@ -63,6 +67,10 @@ function groupCardHtml(g){
 }
 function renderGuests(){
   const root=$("#guestList"),list=visibleGuests();root.innerHTML="";
+  if(!state.loaded){
+    root.innerHTML='<div class="empty"><strong>Loading guest list…</strong><br><span style="opacity:.72">Connecting to Google Sheet</span></div>';
+    return;
+  }
   if(!list.length){root.innerHTML='<div class="empty">No guests found.</div>';return}
   // Show family/group controls in both search results and table attendance.
   const grouped=new Map();
@@ -98,7 +106,7 @@ function renderTableMap(){
   $("#tableMapTitle").textContent=mapTable==="Main"?"Main Table location":"Table "+mapTable+" location";
   pin.textContent="";
   pin.className="map-pin"+(mapTable==="Main"?" main":"");
-  pin.style.left=pos[0]+"px"; pin.style.top=pos[1]+"px";
+  pin.style.left=(pos[0]+34)+"px"; pin.style.top=(pos[1]-34)+"px";
   requestAnimationFrame(()=>{
     const w=win.clientWidth,h=win.clientHeight;
     // Show surrounding context, not just the table itself.
@@ -126,6 +134,7 @@ function serverGuest(r){
 }
 function applyServer(rows, revision){
   if(!Array.isArray(rows))return;
+  state.loaded=true;
   const pendingOld=new Map(state.guests.filter(g=>syncState.pending.has(g.id)).map(g=>[g.id,g]));
   state.guests=rows.map(serverGuest).map(g=>{
     const old=pendingOld.get(g.id);
@@ -211,7 +220,7 @@ function setSyncVisual(status){
   const dot=$("#dot"),text=$("#connectionText"),btn=$("#sync");
   btn.classList.toggle("spinning",status==="syncing"||status==="saving");
   dot.classList.remove("live","syncing","delayed");
-  if(status==="live"){dot.classList.add("live");text.textContent="Live · synced with Google Sheet";}
+  if(status==="live"){dot.classList.add("live");text.textContent=state.loaded?`${state.guests.length} guests loaded · Live`:"Connecting to Google Sheet…";}
   else if(status==="saving"){dot.classList.add("syncing");text.textContent="Saving to Google Sheet…";}
   else if(status==="syncing"){dot.classList.add("syncing");text.textContent="Syncing with Google Sheet…";}
   else {dot.classList.add("delayed");text.textContent="Sync delayed — showing last saved copy";}
