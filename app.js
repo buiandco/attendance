@@ -40,18 +40,24 @@ function renderTables(){const root=$("#tables");root.innerHTML="";tableOrder.for
 function visibleGuests(){
   let gs=tableGuests(state.table);
   const q=norm(state.query);
-  if(q) gs=state.guests.filter(g=>norm(g.name).includes(q)||norm(g.group).includes(q));
+  if(q){
+    const direct=state.guests.filter(g=>norm(g.name).includes(q)||norm(g.group).includes(q));
+    const matchedGroups=new Set(direct.filter(g=>g.group).map(g=>g.group));
+    const ids=new Set(direct.map(g=>g.id));
+    state.guests.forEach(g=>{if(g.group&&matchedGroups.has(g.group))ids.add(g.id)});
+    gs=state.guests.filter(g=>ids.has(g.id));
+  }
   return gs
 }
 function groupMembers(g){return g.group?state.guests.filter(x=>x.group===g.group):[g]}
 function groupCardHtml(g){
   if(!g.group)return "";
-  const members=groupMembers(g),allIn=members.every(x=>x.attended),gift=members.some(x=>x.gift);
+  const members=groupMembers(g),allIn=members.every(x=>x.attended),someIn=members.some(x=>x.attended),gift=members.some(x=>x.gift);
   return `<div class="group-card">
     <div class="group-head"><div><div class="group-kicker">Family / linked group</div><div class="group-name">${esc(g.group)}</div></div><div class="group-count">${members.length} guest${members.length===1?"":"s"}</div></div>
     <div class="group-members">${members.map(m=>`<div class="group-member ${m.attended?"done":""}"><span>${m.attended?"✓ ":""}${esc(m.name)}</span><span>${m.table==="Main"?"Main Table":"Table "+esc(m.table)}</span></div>`).join("")}</div>
     <div class="group-actions-bar">
-      <button class="group-btn primary" data-group-att="${esc(g.group)}">${allIn?"✓ Group attended":"✓ Check in whole group"}</button>
+      <button class="group-btn primary" data-group-att="${esc(g.group)}">${allIn?"✓ Group attended":someIn?"✓ Check in remaining group":"✓ Check in whole group"}</button>
       <button class="group-btn ${gift?"gifted":""}" data-group-gift="${esc(g.group)}">${gift?"🎁 Gift received":"🎁 Group gift"}</button>
     </div>
   </div>`;
@@ -83,8 +89,8 @@ function renderTableMap(){
   const box=$("#tableMap"),win=$("#mapWindow"),stage=$("#mapStage"),pin=$("#mapPin");
   let mapTable=state.table;
   if(state.query){
-    const vg=visibleGuests();
-    if(vg.length===1) mapTable=vg[0].table; else {box.hidden=true;return}
+    const vg=visibleGuests(),tables=[...new Set(vg.map(g=>g.table).filter(Boolean))];
+    if(tables.length===1) mapTable=tables[0]; else {box.hidden=true;return}
   }
   if(mapTable==="ALL"){box.hidden=true;return}
   const pos=tablePositions[mapTable];

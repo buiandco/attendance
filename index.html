@@ -43,8 +43,12 @@
 .map-window{position:relative;width:100%;aspect-ratio:1/1;overflow:hidden;border-radius:15px;border:1px solid #ead8ca;background:#f0e5d9}
 .map-stage{position:absolute;width:1254px;height:1254px;transform-origin:0 0;will-change:transform}
 .map-stage img{position:absolute;inset:0;width:1254px;height:1254px;display:block;user-select:none;-webkit-user-drag:none}
-.map-pin{position:absolute;width:78px;height:78px;border-radius:50%;border:5px solid rgba(173,85,91,.95);background:transparent;box-shadow:0 0 0 7px rgba(201,117,121,.16);transform:translate(-50%,-50%);display:grid;place-items:center;color:transparent;font-size:0;font-weight:800;pointer-events:none}
-.map-pin.main{width:480px;height:118px;border-radius:24px;font-size:0;background:transparent;color:transparent}
+.map-pin{position:absolute;width:78px;height:78px;border-radius:50%;border:6px solid rgba(173,85,91,.98);background:rgba(255,255,255,.08);box-shadow:0 0 0 8px rgba(201,117,121,.22);transform:translate(-50%,-50%);display:grid;place-items:center;color:transparent;font-size:0;font-weight:800;pointer-events:none;animation:mapPulse 1.25s ease-out infinite}
+.map-pin::before{content:"";position:absolute;inset:-18px;border:4px dashed rgba(173,85,91,.9);border-radius:inherit;animation:mapSpin 5s linear infinite}
+.map-pin::after{content:"";position:absolute;width:13px;height:13px;border-radius:50%;background:#ad555b;box-shadow:0 0 0 7px rgba(173,85,91,.18)}
+@keyframes mapPulse{0%{box-shadow:0 0 0 5px rgba(201,117,121,.38),0 0 0 5px rgba(201,117,121,.25)}70%{box-shadow:0 0 0 10px rgba(201,117,121,.16),0 0 0 30px rgba(201,117,121,0)}100%{box-shadow:0 0 0 8px rgba(201,117,121,.20),0 0 0 34px rgba(201,117,121,0)}}
+@keyframes mapSpin{to{transform:rotate(360deg)}}
+.map-pin.main{width:480px;height:118px;border-radius:24px;font-size:0;background:rgba(255,255,255,.08);color:transparent}
 .map-hint{text-align:center;color:var(--muted);font-size:9px;margin-top:7px}
 
 @media(min-width:650px){.tables{grid-template-columns:repeat(8,1fr)}.guest-list{display:grid;grid-template-columns:1fr 1fr;gap:5px}.guest{border:1px solid #f1e6e1}.modal-back{align-items:center}}
@@ -92,7 +96,7 @@
  <div class="modal"><h3>Undo attendance?</h3><p id="modalText"></p><div class="modal-actions"><button id="cancelUndo" type="button">Keep attended</button><button id="confirmUndo" class="danger" type="button">Undo</button></div></div>
 </div>
 <div id="toast" class="toast"></div>
-<script src="config.js?v=11"></script>
-<script src="app.js?v=11"></script>
+<script src="config.js?v=12"></script>
+<script src="app.js?v=12"></script>
 </body>
 </html>
