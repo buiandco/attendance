@@ -1,5 +1,7 @@
 window.ATTENDANCE_CONFIG = {
-  webAppUrl: "https://script.google.com/macros/s/AKfycbxk18lwwbrRfAVodjwhftAvVtR35L213EQD5o--G2I2nu8UXiX2QHJxfZ1nxMTWo_vB/exec",
-  sharedKey: "BUI-tiful",
-  deviceName: "Check-in Phone"
+  API_URL: "https://script.google.com/macros/s/AKfycbxk18lwwbrRfAVodjwhftAvVtR35L213EQD5o--G2I2nu8UXiX2QHJxfZ1nxMTWo_vB/exec",
+  KEY: "BUI-tiful",
+  deviceName: "Check-in Phone",
+  REQUEST_TIMEOUT_MS: 15000,
+  POLL_MS: 30000
 };
