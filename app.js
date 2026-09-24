@@ -111,13 +111,29 @@ function renderTableMap(){
   });
 }
 function render(){summary();renderTables();renderGuests();renderTableMap()}
+function serverGuest(r){
+  return {
+    id:String(r.id||""),
+    first:String(r.first||""),
+    last:String(r.last||""),
+    name:(String(r.first||"")+" "+String(r.last||"")).trim(),
+    table:String(r.table||""),
+    group:String(r.group||"").trim(),
+    attended:!!r.attended,
+    gift:!!r.gift,
+    time:String(r.time||""),
+    by:String(r.by||"")
+  };
+}
 function applyServer(rows, revision){
   if(!Array.isArray(rows))return;
-  const byId=new Map(rows.map(r=>[String(r.id),r]));
-  state.guests.forEach(g=>{
-    if(syncState.pending.has(g.id))return; // never overwrite a write still in flight
-    const r=byId.get(g.id);if(!r)return;
-    g.group=r.group||"";g.attended=!!r.attended;g.gift=!!r.gift;g.time=r.time||"";g.by=r.by||"";
+  // Google Sheet is authoritative for identity + seating + groups.
+  // Preserve only locally pending attendance fields until their write returns.
+  const pendingOld=new Map(state.guests.filter(g=>syncState.pending.has(g.id)).map(g=>[g.id,g]));
+  state.guests=rows.map(serverGuest).map(g=>{
+    const old=pendingOld.get(g.id);
+    if(!old)return g;
+    return {...g,attended:old.attended,gift:old.gift,time:old.time,by:old.by};
   });
   if(Number.isFinite(Number(revision)))syncState.revision=Number(revision);
   state.lastSync=Date.now();syncState.lastFullSync=Date.now();
@@ -206,8 +222,12 @@ function beginWrite(ids){syncState.activeWrites++;ids.forEach(id=>syncState.pend
 function endWrite(ids){ids.forEach(id=>syncState.pending.delete(id));syncState.activeWrites=Math.max(0,syncState.activeWrites-1);if(syncState.activeWrites===0)setTimeout(pollRevision,250)}
 function applyReturnedGuests(rows,revision){
   if(Array.isArray(rows)){
-    const byId=new Map(rows.map(r=>[String(r.id),r]));
-    state.guests.forEach(g=>{const r=byId.get(g.id);if(r){g.group=r.group||"";g.attended=!!r.attended;g.gift=!!r.gift;g.time=r.time||"";g.by=r.by||""}});
+    const byId=new Map(state.guests.map(g=>[g.id,g]));
+    rows.map(serverGuest).forEach(r=>{
+      const g=byId.get(r.id);
+      if(g)Object.assign(g,r);
+      else state.guests.push(r);
+    });
   }
   if(Number.isFinite(Number(revision)))syncState.revision=Number(revision);
   state.lastSync=Date.now();setSyncVisual("live");render();
