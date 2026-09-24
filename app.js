@@ -186,7 +186,8 @@ async function sync(force=false){
   syncState.busy=true;
   setSyncVisual("syncing");
   try{
-    const d=await api("getData");
+    const out=await api("getData");
+    const d=out.data||{};
     applyServer(d.guests,d.revision);
     setSyncVisual("live");
   }catch(e){
