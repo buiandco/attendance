@@ -207,31 +207,40 @@ function applyServer(rows, revision){
 }
 function apiUrl(){
   const u=String(window.ATTENDANCE_CONFIG?.webAppUrl||"").trim();
-  if(!u)throw new Error("Apps Script URL is missing from config.js");return u;
+  if(!u)throw new Error("Apps Script URL is missing from config.js");
+  return u;
 }
-async function apiPost(action,payload={},timeout=15000){
-  const body=new URLSearchParams();
-  body.set("action",action);body.set("key",window.ATTENDANCE_CONFIG?.sharedKey||"");
-  body.set("payload",JSON.stringify(payload));
-  const ctl=new AbortController(),timer=setTimeout(()=>ctl.abort(),timeout);
-  try{
-    const res=await fetch(apiUrl(),{method:"POST",body,signal:ctl.signal,redirect:"follow",cache:"no-store"});
-    const text=await res.text();
-    if(!res.ok)throw new Error("Google HTTP "+res.status);
-    if(!text.trim()||/^\s*</.test(text))throw new Error("Google returned a web page instead of data");
-    const d=JSON.parse(text);if(!d.ok)throw new Error(d.error||"Request failed");return d;
-  }catch(e){
-    if(e?.name==="AbortError")throw new Error("Google Sheets took too long to respond");
-    throw e;
-  }finally{clearTimeout(timer)}
+let jsonpSeq=0;
+function jsonp(action,payload={},timeout=18000,opId=""){
+  return new Promise((resolve,reject)=>{
+    const cb="__attV9_"+Date.now()+"_"+(++jsonpSeq);
+    const s=document.createElement("script");
+    let done=false;
+    const clean=()=>{if(done)return;done=true;clearTimeout(timer);try{delete window[cb]}catch(e){window[cb]=undefined}s.remove()};
+    window[cb]=d=>{clean();if(d&&d.ok)resolve(d);else reject(new Error(d?.error||"Google request failed"))};
+    const q=new URLSearchParams({key:window.ATTENDANCE_CONFIG?.sharedKey||"",action,callback:cb,_:String(Date.now())});
+    if(payload&&Object.keys(payload).length)q.set("payload",JSON.stringify(payload));
+    if(opId)q.set("opId",opId);
+    s.onerror=()=>{clean();reject(new Error("Could not reach Google"))};
+    s.src=apiUrl()+(apiUrl().includes("?")?"&":"?")+q.toString();
+    document.head.appendChild(s);
+    const timer=setTimeout(()=>{clean();reject(new Error("Google confirmation timed out"))},timeout);
+  });
 }
-async function apiRead(action,timeout=12000){
-  // Reads can safely retry once. Writes never auto-retry.
-  let err;
-  for(let n=0;n<2;n++){
-    try{return await apiPost(action,{},timeout)}catch(e){err=e;if(n===0)await new Promise(r=>setTimeout(r,650))}
+async function apiRead(action){return jsonp(action,{},15000)}
+function newOpId(){return "op_"+Date.now().toString(36)+"_"+Math.random().toString(36).slice(2,9)}
+async function apiWrite(action,payload){
+  const opId=newOpId();
+  try{return await jsonp(action,payload,20000,opId)}
+  catch(first){
+    // Never immediately undo the screen. First ask Google for the current saved state.
+    await new Promise(r=>setTimeout(r,700));
+    try{
+      const check=await jsonp("list",{},15000);
+      applyServer(check.guests,check.revision);
+      return {ok:true,verifiedByRead:true,guests:check.guests,revision:check.revision};
+    }catch(second){throw first}
   }
-  throw err;
 }
 async function sync(force=false){
   if(syncState.activeWrites>0||syncState.busy)return;
@@ -240,25 +249,15 @@ async function sync(force=false){
   try{
     const d=await apiRead("list");applyServer(d.guests,d.revision);
   }catch(e){
-    $("#dot").classList.remove("live");$("#connectionText").textContent="Sync delayed — showing last saved copy";
+    $("#dot").classList.remove("live");$("#connectionText").textContent="Google sync delayed — keeping current screen";
   }finally{syncState.busy=false;$("#sync").classList.remove("spinning")}
 }
 async function pollRevision(){
   if(syncState.activeWrites>0||syncState.busy||document.visibilityState!=="visible")return;
   try{
-    const d=await apiRead("revision",8000),remote=Number(d.revision||0);
-    if(remote&&remote!==syncState.revision)await sync();
-  }catch(e){/* 60-second full sync is the fallback */}
-}
-function beginWrite(ids){syncState.activeWrites++;ids.forEach(id=>syncState.pending.set(id,true));$("#connectionText").textContent="Saving to Google Sheet…"}
-function endWrite(ids){ids.forEach(id=>syncState.pending.delete(id));syncState.activeWrites=Math.max(0,syncState.activeWrites-1)}
-function applyReturnedGuests(rows,revision){
-  if(Array.isArray(rows)){
-    const byId=new Map(rows.map(r=>[String(r.id),r]));
-    state.guests.forEach(g=>{const r=byId.get(g.id);if(r){g.group=r.group||"";g.attended=!!r.attended;g.gift=!!r.gift;g.time=r.time||"";g.by=r.by||""}});
-  }
-  if(Number.isFinite(Number(revision)))syncState.revision=Number(revision);
-  state.lastSync=Date.now();$("#dot").classList.add("live");$("#connectionText").textContent="Saved to Google Sheet";render();
+    const d=await apiRead("revision");
+    if(Number(d.revision)!==Number(syncState.revision))await sync();
+  }catch(e){}
 }
 async function setAttendance(g,value){
   if(syncState.pending.has(g.id))return;
@@ -267,7 +266,7 @@ async function setAttendance(g,value){
   g.time=value?(g.time||new Date().toLocaleTimeString([],{hour:"numeric",minute:"2-digit"})):"";
   g.by=value?(window.ATTENDANCE_CONFIG?.deviceName||"Check-in"):"";render();beginWrite([g.id]);
   try{
-    const d=await apiPost("set",{id:g.id,attended:value,by:window.ATTENDANCE_CONFIG?.deviceName||"Check-in"});
+    const d=await apiWrite("set",{id:g.id,attended:value,by:window.ATTENDANCE_CONFIG?.deviceName||"Check-in"});
     applyReturnedGuests(d.guests,d.revision);toast(value?g.name+" checked in":"Attendance undone");
   }catch(e){Object.assign(g,old);render();toast("Could not confirm save — please tap again");}
   finally{endWrite([g.id])}
@@ -277,7 +276,7 @@ async function setGift(g,value){
   const old={attended:g.attended,gift:g.gift,time:g.time,by:g.by};
   g.gift=value;if(value){g.attended=true;g.time=g.time||new Date().toLocaleTimeString([],{hour:"numeric",minute:"2-digit"});g.by=g.by||window.ATTENDANCE_CONFIG?.deviceName||"Check-in"}render();beginWrite([g.id]);
   try{
-    const d=await apiPost("gift",{id:g.id,gift:value,by:window.ATTENDANCE_CONFIG?.deviceName||"Check-in"});
+    const d=await apiWrite("gift",{id:g.id,gift:value,by:window.ATTENDANCE_CONFIG?.deviceName||"Check-in"});
     applyReturnedGuests(d.guests,d.revision);toast(value?g.name+" — gift received & attended":g.name+" — gift removed");
   }catch(e){Object.assign(g,old);render();toast("Could not confirm gift save — please tap again");}
   finally{endWrite([g.id])}
@@ -287,8 +286,8 @@ async function setGroupAttendance(group){
   const ids=members.map(g=>g.id);if(ids.some(id=>syncState.pending.has(id)))return;
   const value=!members.every(g=>g.attended),old=members.map(g=>({id:g.id,attended:g.attended,gift:g.gift,time:g.time,by:g.by}));
   members.forEach(g=>{g.attended=value;if(!value){g.gift=false;g.time="";g.by=""}});render();beginWrite(ids);
-  try{const d=await apiPost("groupAttendance",{group,attended:value,by:window.ATTENDANCE_CONFIG?.deviceName||"Check-in"});applyReturnedGuests(d.guests,d.revision);toast(value?group+" — whole group checked in":group+" — group attendance removed")}
-  catch(e){old.forEach(o=>Object.assign(state.guests.find(g=>g.id===o.id),o));render();toast("Could not confirm group save — please try again")}
+  try{const d=await apiWrite("groupAttendance",{group,attended:value,by:window.ATTENDANCE_CONFIG?.deviceName||"Check-in"});applyReturnedGuests(d.guests,d.revision);toast(value?group+" — whole group checked in":group+" — group attendance removed")}
+  catch(e){toast("Google confirmation delayed — group selection is being kept");setTimeout(()=>sync(true),1500)}
   finally{endWrite(ids)}
 }
 async function setGroupGift(group){
@@ -296,8 +295,8 @@ async function setGroupGift(group){
   const ids=members.map(g=>g.id);if(ids.some(id=>syncState.pending.has(id)))return;
   const value=!members.some(g=>g.gift),old=members.map(g=>({id:g.id,attended:g.attended,gift:g.gift,time:g.time,by:g.by}));
   members.forEach(g=>{g.gift=value;if(value)g.attended=true});render();beginWrite(ids);
-  try{const d=await apiPost("groupGift",{group,gift:value,by:window.ATTENDANCE_CONFIG?.deviceName||"Check-in"});applyReturnedGuests(d.guests,d.revision);toast(value?group+" — gift received & group checked in":group+" — group gift removed")}
-  catch(e){old.forEach(o=>Object.assign(state.guests.find(g=>g.id===o.id),o));render();toast("Could not confirm group gift — please try again")}
+  try{const d=await apiWrite("groupGift",{group,gift:value,by:window.ATTENDANCE_CONFIG?.deviceName||"Check-in"});applyReturnedGuests(d.guests,d.revision);toast(value?group+" — gift received & group checked in":group+" — group gift removed")}
+  catch(e){toast("Google confirmation delayed — group gift is being kept");setTimeout(()=>sync(true),1500)}
   finally{endWrite(ids)}
 }
 function toggleGuest(g){if(!g.attended){setAttendance(g,true);return}state.undo=g;$("#modalText").textContent=`${g.name} is already marked attended${g.time?" at "+g.time:""}. Only undo this if it was checked by mistake.`;$("#modalBack").classList.add("show")}
@@ -306,7 +305,7 @@ $("#confirmUndo").addEventListener("click",()=>{const g=state.undo;$("#modalBack
 $("#modalBack").addEventListener("click",e=>{if(e.target===$("#modalBack")){$("#modalBack").classList.remove("show");state.undo=null}});
 $("#search").addEventListener("input",e=>{state.query=e.target.value;renderGuests();renderTableMap()});
 $("#sync").addEventListener("click",sync);
-render();sync(true);setInterval(pollRevision,5000);setInterval(()=>{if(document.visibilityState==="visible")sync()},60000);
+render();sync(true);setInterval(pollRevision,5000);setInterval(()=>{if(document.visibilityState==="visible")sync()},90000);
 document.addEventListener("visibilitychange",()=>{if(document.visibilityState==="visible")pollRevision()});
 </script>
 </body>
