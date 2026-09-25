@@ -35,12 +35,12 @@ function esc(s){return String(s).replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",
 function toast(m){const t=$("#toast");t.textContent=m;t.classList.add("show");clearTimeout(toast.t);toast.t=setTimeout(()=>t.classList.remove("show"),2500)}
 function summary(){const n=state.guests.filter(g=>g.attended).length,t=state.guests.length,p=t?Math.round(n/t*100):0;$("#arrived").textContent=n;$("#total").textContent=t;$("#remaining").textContent=t-n;$("#percent").textContent=p+"%";$("#bar").style.width=p+"%"}
 function tableGuests(t){return state.guests.filter(g=>t==="ALL"||g.table===t)}
-function renderTables(){const root=$("#tables");root.innerHTML="";tableOrder.forEach(t=>{const gs=tableGuests(t),n=gs.filter(g=>g.attended).length,b=document.createElement("button");b.type="button";b.className="table-btn"+(state.table===t?" active":"")+(gs.length&&n===gs.length?" complete":"");b.innerHTML=`<div class="tn">${t==="ALL"?"ALL":t==="Main"?"MAIN":"TABLE "+t}</div><div class="tc">${n} / ${gs.length}</div>`;b.addEventListener("click",()=>{state.table=t;state.query="";$("#search").value="";render()});root.appendChild(b)})}
+function renderTables(){const root=$("#tables");root.innerHTML="";tableOrder.forEach(t=>{const gs=tableGuests(t),n=gs.filter(g=>g.attended).length,b=document.createElement("button");b.type="button";b.className="table-btn"+(state.table===t?" active":"")+(gs.length&&n===gs.length?" complete":"");b.innerHTML=`<div class="tn">${t==="ALL"?"ALL":t==="Main"?"MAIN":"TABLE "+t}</div><div class="tc">${n} / ${gs.length}</div>`;b.addEventListener("click",()=>{state.table=t;state.query="";$("#search").value="";$("#clearSearch").classList.remove("show");render()});root.appendChild(b)})}
 function visibleGuests(){
   let gs=tableGuests(state.table);
   const q=norm(state.query);
   if(q){
-    const direct=state.guests.filter(g=>norm(g.name).includes(q)||norm(g.group).includes(q));
+    const direct=state.guests.filter(g=>norm(g.name).includes(q));
     const matchedGroups=new Set(direct.filter(g=>g.group).map(g=>g.group));
     const ids=new Set(direct.map(g=>g.id));
     state.guests.forEach(g=>{if(g.group&&matchedGroups.has(g.group))ids.add(g.id)});
@@ -106,7 +106,7 @@ function renderTableMap(){
   $("#tableMapTitle").textContent=mapTable==="Main"?"Main Table location":"Table "+mapTable+" location";
   pin.textContent="";
   pin.className="map-pin"+(mapTable==="Main"?" main":"");
-  pin.style.left=(pos[0]+34)+"px"; pin.style.top=(pos[1]-34)+"px";
+  pin.style.left=pos[0]+"px"; pin.style.top=pos[1]+"px";
   requestAnimationFrame(()=>{
     const w=win.clientWidth,h=win.clientHeight;
     // Show surrounding context, not just the table itself.
@@ -283,7 +283,8 @@ function toggleGuest(g){if(!g.attended){setAttendance(g,true);return}state.undo=
 $("#cancelUndo").addEventListener("click",()=>{$("#modalBack").classList.remove("show");state.undo=null});
 $("#confirmUndo").addEventListener("click",()=>{const g=state.undo;$("#modalBack").classList.remove("show");state.undo=null;if(g)setAttendance(g,false)});
 $("#modalBack").addEventListener("click",e=>{if(e.target===$("#modalBack")){$("#modalBack").classList.remove("show");state.undo=null}});
-$("#search").addEventListener("input",e=>{state.query=e.target.value;renderGuests();renderTableMap()});
+$("#search").addEventListener("input",e=>{state.query=e.target.value;$("#clearSearch").classList.toggle("show",!!e.target.value);renderGuests();renderTableMap()});
+$("#clearSearch").addEventListener("click",()=>{state.query="";$("#search").value="";$("#clearSearch").classList.remove("show");$("#search").focus();renderGuests();renderTableMap()});
 $("#sync").addEventListener("click",sync);
 render();sync(true);setInterval(pollRevision,3000);setInterval(()=>{if(document.visibilityState==="visible"&&syncState.activeWrites===0)sync()},30000);
 document.addEventListener("visibilitychange",()=>{if(document.visibilityState==="visible")pollRevision()});
